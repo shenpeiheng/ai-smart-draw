@@ -132,6 +132,28 @@ export function ModelConfigDialog({
                             />
                         </label>
 
+                        <label className="text-sm space-y-1">
+                            <span className="block font-medium">最大输出 Token</span>
+                            <Input
+                                type="number"
+                                min={0}
+                                step={500}
+                                value={draft.maxOutputTokens ?? ""}
+                                placeholder="默认 12000"
+                                onChange={(e) =>
+                                    handleFieldChange(
+                                        "maxOutputTokens",
+                                        e.target.value
+                                            ? Math.max(0, Number(e.target.value))
+                                            : undefined
+                                    )
+                                }
+                            />
+                            <span className="text-[11px] text-muted-foreground">
+                                可根据模型限额调整，避免长 JSON 被截断
+                            </span>
+                        </label>
+
                         <div className="text-xs text-muted-foreground space-y-1 border rounded-md p-2">
                             <div>提示</div>
                             <ul className="list-disc pl-4 space-y-1">

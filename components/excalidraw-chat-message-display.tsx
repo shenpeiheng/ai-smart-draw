@@ -51,16 +51,24 @@ export function ExcalidrawChatMessageDisplay({
                     }));
                 }
 
-                if (
-                    part.type === "tool-display_excalidraw" &&
-                    part.input?.scene
-                ) {
+                if (part.type === "tool-display_excalidraw") {
+                    const scenePayload = part.input?.scene;
+                    if (!scenePayload) {
+                        return;
+                    }
+                    const serializedScene =
+                        typeof scenePayload === "string"
+                            ? scenePayload
+                            : JSON.stringify(scenePayload, null, 2);
+
                     if (state === "input-streaming") {
                         // Throttle draft updates to reduce UI jank
-                        draftBufferRef.current = part.input.scene;
+                        draftBufferRef.current = serializedScene;
                         if (!draftFlushTimer.current) {
                             draftFlushTimer.current = setTimeout(() => {
-                                setSceneDraft(draftBufferRef.current);
+                                if (draftBufferRef.current) {
+                                    setSceneDraft(draftBufferRef.current);
+                                }
                                 draftFlushTimer.current = null;
                             }, 200);
                         }
@@ -73,10 +81,10 @@ export function ExcalidrawChatMessageDisplay({
                             clearTimeout(draftFlushTimer.current);
                             draftFlushTimer.current = null;
                         }
-                        setSceneDraft(null);
-                        applyScene(part.input.scene, part.input.summary);
-                        processedToolCalls.current.add(toolCallId);
                         draftBufferRef.current = null;
+                        setSceneDraft(null);
+                        applyScene(scenePayload, part.input.summary);
+                        processedToolCalls.current.add(toolCallId);
                     }
                 }
             });

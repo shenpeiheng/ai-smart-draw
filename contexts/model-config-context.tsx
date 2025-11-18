@@ -6,6 +6,7 @@ export interface ModelConfig {
     apiKey?: string;
     baseUrl?: string;
     model?: string;
+    maxOutputTokens?: number;
 }
 
 interface ModelConfigContextValue {
@@ -21,6 +22,7 @@ export const defaultModelConfig: ModelConfig = {
     apiKey: "",
     baseUrl: "",
     model: "",
+    maxOutputTokens: undefined,
 };
 
 const ModelConfigContext = createContext<ModelConfigContextValue | undefined>(undefined);

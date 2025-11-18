@@ -2,6 +2,9 @@ import { streamText, convertToModelMessages } from "ai";
 import { z } from "zod/v3";
 import { resolveModel } from "@/lib/model-provider";
 
+const DEFAULT_MAX_OUTPUT_TOKENS = 12_000;
+const MAX_OUTPUT_TOKENS_CAP = 24_000;
+
 export const maxDuration = 60;
 
 export async function POST(req: Request) {
@@ -10,10 +13,11 @@ export async function POST(req: Request) {
 
         const systemMessage = `
 You are an Excalidraw scene architect.
-Return only well-formed Excalidraw scene JSON (elements + appState + files) via the display_excalidraw tool.
+Return only well-formed Excalidraw scene data (elements + appState + files) via the display_excalidraw tool.
 
 Rules for reliability:
 - ALWAYS include a complete object: { "elements": [...], "appState": {...}, "files": {...} }.
+- Provide the scene payload as a structured JSON object inside the tool call (never double-stringify or escape it).
 - If unsure, reuse the current scene and apply small changes instead of rebuilding from scratch.
 - Keep layouts tidy, distribute nodes evenly, align connectors, and avoid overlaps.
 - Use meaningful text labels; keep coordinates reasonable (within a 1200x800 canvas).
@@ -66,23 +70,45 @@ ${lastMessageText}
             }
         }
 
-        const { client, model } = resolveModel(modelConfig);
+        const { client, model, maxOutputTokens } = resolveModel(modelConfig);
+        const outputTokenBudget = Math.min(
+            Math.max(
+                2_000,
+                maxOutputTokens && Number.isFinite(maxOutputTokens)
+                    ? Math.floor(maxOutputTokens)
+                    : DEFAULT_MAX_OUTPUT_TOKENS
+            ),
+            MAX_OUTPUT_TOKENS_CAP
+        );
 
         const result = streamText({
             system: systemMessage,
             model: client.chat(model),
             messages: enhancedMessages,
             temperature: 0,
+            maxOutputTokens: outputTokenBudget,
             tools: {
                 display_excalidraw: {
                     description:
-                        "Render an Excalidraw scene by supplying its full JSON payload.",
+                        "Render an Excalidraw scene by supplying a structured scene payload.",
                     inputSchema: z.object({
-                        scene: z
-                            .string()
-                            .describe(
-                                "Stringified JSON containing {elements, appState, files}"
-                            ),
+                        scene: z.object({
+                            elements: z
+                                .array(z.record(z.any()))
+                                .describe(
+                                    "List of Excalidraw elements with coordinates, styles, etc."
+                                ),
+                            appState: z
+                                .record(z.any())
+                                .describe("Excalidraw appState object")
+                                .optional()
+                                .default({}),
+                            files: z
+                                .record(z.any())
+                                .describe("Files map keyed by element ids")
+                                .optional()
+                                .default({}),
+                        }),
                         summary: z
                             .string()
                             .optional()

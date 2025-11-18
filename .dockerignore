@@ -1,9 +1,50 @@
+# General
 .git
 .gitignore
+.gitattributes
+
+# Dependencies
 node_modules
+
+# Build artifacts
 .next
-.env*
+.nuxt
+.cache
+.vscode
+.idea
+
+# Environment files
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# System Files
+.DS_Store
+Thumbs.db
+
+# Test files
+coverage
+*.log
+
+# Build files
 Dockerfile
-npm-debug.log
-yarn-error.log
 dist
+build
+out
+
+# Documentation
+README.md
+LICENSE
+*.pdf
+
+# Misc
+*.swp
+*.swo
+*~

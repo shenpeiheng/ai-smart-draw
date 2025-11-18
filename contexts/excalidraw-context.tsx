@@ -931,6 +931,14 @@ const DEFAULT_SCENE = JSON.stringify(
     2
 );
 
+type NormalizedScene = {
+    elements: any[];
+    appState: Record<string, any>;
+    files: Record<string, any>;
+};
+
+type NormalizedSceneInput = Partial<NormalizedScene> | null | undefined;
+
 interface SceneSnapshot {
     id: string;
     summary?: string;
@@ -950,7 +958,7 @@ interface ExcalidrawContextValue {
         files: Record<string, any>
     ) => void;
     applyScene: (
-        sceneJson: string,
+        scene: string | NormalizedSceneInput,
         summary?: string,
         options?: { skipHistory?: boolean; replaceHistory?: boolean }
     ) => void;
@@ -983,7 +991,8 @@ function clampFontFamily(val: any) {
     return allowed.includes(val) ? val : 1;
 }
 
-function normalizeScene(parsed: any) {
+function normalizeScene(input: NormalizedSceneInput): NormalizedScene {
+    const parsed = input ?? {};
     const defaultAppState = {
         viewBackgroundColor: "#ffffff",
         currentItemStrokeColor: "#1e1e1e",
@@ -1158,6 +1167,17 @@ function normalizeScene(parsed: any) {
     };
 }
 
+function coerceSceneInput(scene: string | NormalizedSceneInput): NormalizedScene {
+    if (typeof scene === "string") {
+        return normalizeScene(JSON.parse(scene));
+    }
+    return normalizeScene(scene);
+}
+
+function stringifyScene(scene: NormalizedScene) {
+    return JSON.stringify(scene, null, 2);
+}
+
 export function ExcalidrawProvider({
     children,
 }: {
@@ -1194,15 +1214,14 @@ export function ExcalidrawProvider({
 
     const applyScene = useCallback(
         (
-            sceneJson: string,
+            scene: string | NormalizedSceneInput,
             summary?: string,
             options?: { skipHistory?: boolean; replaceHistory?: boolean }
         ) => {
             try {
-                const parsed = JSON.parse(sceneJson);
-                const normalized = normalizeScene(parsed);
+                const normalized = coerceSceneInput(scene);
                 excalidrawAPIRef.current?.updateScene(normalized);
-                const normalizedString = JSON.stringify(normalized, null, 2);
+                const normalizedString = stringifyScene(normalized);
                 setSceneData(normalizedString);
                 setSceneDraft(null);
                 if (!options?.skipHistory) {
