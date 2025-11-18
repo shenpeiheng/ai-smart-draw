@@ -13,13 +13,13 @@ export function MermaidWorkspace() {
                 <MermaidPreview
                     definition={definition}
                     className="h-full"
-                    onReset={clearDefinition}
                 />
             </div>
             <div className="h-52">
                 <MermaidDefinitionCard
                     definition={definition}
                     onDefinitionChange={setDefinition}
+                    onReset={clearDefinition}
                 />
             </div>
         </div>

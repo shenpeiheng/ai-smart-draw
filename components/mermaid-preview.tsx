@@ -2,24 +2,22 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Copy, RefreshCcw, ZoomIn, ZoomOut } from "lucide-react";
+import { ZoomIn, ZoomOut, RefreshCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MermaidPreviewProps {
     definition: string;
     className?: string;
-    onReset?: () => void;
 }
 
 export function MermaidPreview({
     definition,
     className,
-    onReset,
 }: MermaidPreviewProps) {
     const [mermaidAPI, setMermaidAPI] = useState<any>(null);
     const [svg, setSvg] = useState<string>("");
     const [renderError, setRenderError] = useState<string | null>(null);
-    const [copied, setCopied] = useState(false);
+
     const [zoom, setZoom] = useState(1);
 
     const diagramId = useMemo(
@@ -86,20 +84,7 @@ export function MermaidPreview({
         };
     }, [definition, mermaidAPI, diagramId]);
 
-    useEffect(() => {
-        if (!copied) return;
-        const timer = setTimeout(() => setCopied(false), 2000);
-        return () => clearTimeout(timer);
-    }, [copied]);
 
-    const handleCopyDefinition = async () => {
-        try {
-            await navigator.clipboard.writeText(definition);
-            setCopied(true);
-        } catch (error) {
-            console.error("Failed to copy Mermaid definition:", error);
-        }
-    };
 
     const zoomIn = () => setZoom((z) => Math.min(z + 0.1, 3));
     const zoomOut = () => setZoom((z) => Math.max(z - 0.1, 0.3));
@@ -131,27 +116,7 @@ export function MermaidPreview({
                             <ZoomIn className="h-4 w-4" />
                         </Button>
                     </div>
-                    {onReset && (
-                        <Button
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            onClick={onReset}
-                        >
-                            <RefreshCcw className="h-4 w-4 mr-2" />
-                            重置
-                        </Button>
-                    )}
-                    <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={handleCopyDefinition}
-                        disabled={!definition}
-                    >
-                        <Copy className="h-4 w-4 mr-2" />
-                        {copied ? "已复制" : "复制"}
-                    </Button>
+
                 </div>
             </div>
 
