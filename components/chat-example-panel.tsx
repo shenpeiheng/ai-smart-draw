@@ -51,10 +51,10 @@ export default function ExamplePanel({
                 <button
                     className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-1 px-2 rounded"
                     onClick={() =>
-                        setInput("帮我设计 RocketMQ 分布式事务流程图")
+                        setInput("帮我设计微服务的架构图")
                     }
                 >
-                    帮我设计 RocketMQ 分布式事务流程图
+                    帮我设计微服务的架构图
                 </button>
                 <button
                     className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-1 px-2 rounded"
