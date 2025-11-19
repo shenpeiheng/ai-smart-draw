@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ClipboardCopy, ClipboardCheck, RefreshCcw } from "lucide-react";
+import {copyToClipboard} from "@/components/plantuml-definition-card";
 
 interface MermaidDefinitionCardProps {
     definition: string;
@@ -26,7 +27,7 @@ export function MermaidDefinitionCard({
 
     const handleCopy = async () => {
         if (!definition) return;
-        await navigator.clipboard.writeText(definition);
+        await copyToClipboard(definition);
         setCopied(true);
     };
 

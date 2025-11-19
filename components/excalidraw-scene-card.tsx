@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import {ClipboardCopy, ClipboardCheck, RefreshCcw} from "lucide-react";
 import { useExcalidraw } from "@/contexts/excalidraw-context";
+import {copyToClipboard} from "@/components/plantuml-definition-card";
 
 interface Props {
     onClear: () => void;
@@ -53,7 +54,7 @@ export function ExcalidrawSceneCard({ onClear, onHistory, historyDisabled }: Pro
     const handleCopy = async () => {
         if (!draft) return;
         try {
-            await navigator.clipboard.writeText(draft);
+            await copyToClipboard(draft);
             setCopied(true);
         } catch (e) {
             console.warn("Copy failed", e);

@@ -26,7 +26,7 @@ export function PlantUMLDefinitionCard({
 
     const handleCopy = async () => {
         if (!definition) return;
-        await navigator.clipboard.writeText(definition);
+        await copyToClipboard(definition);
         setCopied(true);
     };
 
@@ -84,3 +84,38 @@ export function PlantUMLDefinitionCard({
         </div>
     );
 }
+
+/**
+ * 安全复制文本到剪贴板（TypeScript 版本）
+ * 兼容现代剪贴板 API 和降级方案
+ * @param {string} text - 需要复制的文本
+ * @returns {Promise<boolean>} - 是否复制成功
+ */
+export const copyToClipboard = async (text: string): Promise<boolean> => {
+    try {
+        // 尝试使用现代剪贴板 API
+        if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+            await navigator.clipboard.writeText(text);
+            return true;
+        }
+
+        // 降级兼容方案：使用 document.execCommand
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+
+        const success = document.execCommand('copy');
+        document.body.removeChild(textarea);
+
+        if (!success) {
+            throw new Error('复制失败');
+        }
+        return true;
+    } catch (error) {
+        console.error('复制失败:', error);
+        return false;
+    }
+};

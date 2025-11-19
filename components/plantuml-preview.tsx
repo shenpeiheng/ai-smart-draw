@@ -96,11 +96,6 @@ export function PlantUMLPreview({ definition }: PlantUMLPreviewProps) {
         return () => clearTimeout(timer);
     }, [copied]);
 
-    const handleCopy = async () => {
-        await navigator.clipboard.writeText(definition);
-        setCopied(true);
-    };
-
     const handleRetry = () => {
         setRetryNonce((value) => value + 1);
     };
