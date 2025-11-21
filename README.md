@@ -3,10 +3,11 @@
 An intelligent diagramming application built with Next.js that harnesses the power of AI to create and manipulate various types of diagrams including Draw.io (diagrams.net), Mermaid, PlantUML, and Excalidraw through natural language commands.
 
 🔗 **Live Demo**: 
-![Draw.io](public/d9344e69-1e5d-4440-8a43-7591c794e16d.png)
-![Mermaid](public/7185b500-522c-4a91-91f0-1ca4b74c79bc.png)
-![PlanUML](public/2abe9792-359b-440f-877f-4b8ab20b7495.png)
-![Excalidraw](public/ebdcfd3a-9c68-42ad-9cde-0cff9c073e27.png)
+![8eb59d07-d285-425b-abf1-6e36a564f481.png](public/8eb59d07-d285-425b-abf1-6e36a564f481.png)
+![0f218df2-87d0-4f3b-8b67-a2f8a54f4e12.png](public/0f218df2-87d0-4f3b-8b67-a2f8a54f4e12.png)
+![358e4e3e-7806-406c-b91b-2e65e1e0aba4.png](public/358e4e3e-7806-406c-b91b-2e65e1e0aba4.png)
+![b04e7f3b-a7e1-45a1-b1f2-60e345fec57e.png](public/b04e7f3b-a7e1-45a1-b1f2-60e345fec57e.png)
+![f535886a-ffbf-47b0-87d5-dbddc3dd3b6c.png](public/f535886a-ffbf-47b0-87d5-dbddc3dd3b6c.png)
 
 ## 🌟 Key Features
 
