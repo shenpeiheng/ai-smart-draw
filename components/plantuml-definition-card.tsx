@@ -3,18 +3,22 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ClipboardCopy, ClipboardCheck, RefreshCcw } from "lucide-react";
+import { ClipboardCopy, ClipboardCheck, RefreshCcw, ChevronsDown, ChevronsUp } from "lucide-react";
 
 interface PlantUMLDefinitionCardProps {
     definition: string;
     onDefinitionChange?: (definition: string) => void;
     onReset?: () => void;
+    isCollapsed?: boolean;
+    onToggle?: () => void;
 }
 
 export function PlantUMLDefinitionCard({
     definition,
     onDefinitionChange,
     onReset,
+    isCollapsed,
+    onToggle,
 }: PlantUMLDefinitionCardProps) {
     const [copied, setCopied] = useState(false);
 
@@ -39,17 +43,33 @@ export function PlantUMLDefinitionCard({
                         调整代码进行实时预览
                     </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1 items-center">
+                    {onToggle && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={onToggle}
+                            title="折叠"
+                            aria-label={isCollapsed ? "Expand panel" : "Collapse panel"}
+                        >
+                            {isCollapsed ? (
+                                <ChevronsUp className="h-4 w-4" />
+                            ) : (
+                                <ChevronsDown className="h-4 w-4" />
+                            )}
+                        </Button>
+                    )}
                     {onReset && (
                         <Button
                             type="button"
                             size="sm"
                             variant="outline"
                             onClick={onReset}
+                            title="重置"
                             disabled={!definition}
                         >
-                            <RefreshCcw className="h-4 w-4 mr-2" />
-                            重置
+                            <RefreshCcw className="h-4 w-4" />
                         </Button>
                     )}
                     <Button
@@ -57,30 +77,29 @@ export function PlantUMLDefinitionCard({
                         size="sm"
                         variant="outline"
                         onClick={handleCopy}
+                        title="复制"
                         disabled={!definition}
                     >
                         {copied ? (
-                            <ClipboardCheck className="h-4 w-4 mr-2" />
+                            <ClipboardCheck className="h-4 w-4" />
                         ) : (
-                            <ClipboardCopy className="h-4 w-4 mr-2" />
+                            <ClipboardCopy className="h-4 w-4" />
                         )}
-                        {copied ? "已复制" : "复制"}
                     </Button>
                 </div>
             </div>
-            <div className="flex-1 p-1 bg-muted/10 flex flex-col gap-2 overflow-hidden">
-                <Textarea
-                    value={definition}
-                    onChange={(event) => onDefinitionChange?.(event.target.value)}
-                    placeholder="Describe a diagram or type PlantUML directly..."
-                    className="flex-1 min-h-0 text-xs resize-none bg-white/70 focus-visible:ring-2 overflow-auto"
-                    spellCheck={false}
-                    disabled={!onDefinitionChange}
-                />
-                <p className="text-[11px] text-muted-foreground">
-                    变更的 PlantUML 渲染器实时同步
-                </p>
-            </div>
+            {!isCollapsed && (
+                <div className="flex-1 bg-muted/10 flex flex-col overflow-hidden">
+                    <Textarea
+                        value={definition}
+                        onChange={(event) => onDefinitionChange?.(event.target.value)}
+                        placeholder="Describe a diagram or type PlantUML directly..."
+                        className="flex-1 min-h-0 text-xs resize-none bg-white/70 focus-visible:ring-2 overflow-auto"
+                        spellCheck={false}
+                        disabled={!onDefinitionChange}
+                    />
+                </div>
+            )}
         </div>
     );
 }

@@ -206,21 +206,21 @@ export function PlantUMLPreview({ definition }: PlantUMLPreviewProps) {
                     </p>
                 </div>
                 <div className="flex gap-2 flex-wrap justify-end items-center">
-                    <Button variant="outline" size="sm" onClick={resetZoom}>
+                    <Button variant="outline" title="重置" size="sm" onClick={resetZoom}>
                         <RefreshCcw className="h-4 w-4" />
                     </Button>
                     <div className="flex rounded-md overflow-hidden border border-input shadow-sm">
-                        <Button variant="outline" size="sm" onClick={zoomOut} className="rounded-none border-0 px-3">
+                        <Button variant="outline" title="放小" size="sm" onClick={zoomOut} className="rounded-none border-0 px-3">
                             <ZoomOut className="h-4 w-4" />
                         </Button>
                         <span className="flex items-center justify-center text-xs w-16 bg-background">
                             {Math.round(zoom * 100)}%
                         </span>
-                        <Button variant="outline" size="sm" onClick={zoomIn} className="rounded-none border-0 px-3">
+                        <Button variant="outline" title="放大" size="sm" onClick={zoomIn} className="rounded-none border-0 px-3">
                             <ZoomIn className="h-4 w-4" />
                         </Button>
                     </div>
-                    <Button variant="outline" size="sm" onClick={handleDownload} disabled={!svgMarkup}>
+                    <Button variant="outline" title="下载" size="sm" onClick={handleDownload} disabled={!svgMarkup}>
                         <Download className="h-4 w-4" />
                     </Button>
                 </div>

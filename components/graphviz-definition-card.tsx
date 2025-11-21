@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { ClipboardCopy, ClipboardCheck, RefreshCcw } from "lucide-react";
+import { ClipboardCopy, ClipboardCheck, RefreshCcw, ChevronsDown, ChevronsUp } from "lucide-react";
 import { copyToClipboard } from "@/components/plantuml-definition-card";
 
 interface GraphvizDefinitionCardProps {
@@ -11,6 +11,8 @@ interface GraphvizDefinitionCardProps {
     onChange: (value: string) => void;
     onClear: () => void;
     defaultDefinition: string;
+    isCollapsed?: boolean;
+    onToggle?: () => void;
 }
 
 export function GraphvizDefinitionCard({
@@ -18,6 +20,8 @@ export function GraphvizDefinitionCard({
     onChange,
     onClear,
     defaultDefinition,
+    isCollapsed,
+    onToggle,
 }: GraphvizDefinitionCardProps) {
     const [copied, setCopied] = useState(false);
 
@@ -46,44 +50,59 @@ export function GraphvizDefinitionCard({
                         调整代码进行实时预览
                     </p>
                 </div>
-                <div className="flex gap-2">
+                <div className="flex gap-1 items-center">
+                    {onToggle && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={onToggle}
+                            title="折叠"
+                            aria-label={isCollapsed ? "Expand panel" : "Collapse panel"}
+                        >
+                            {isCollapsed ? (
+                                <ChevronsUp className="h-4 w-4" />
+                            ) : (
+                                <ChevronsDown className="h-4 w-4" />
+                            )}
+                        </Button>
+                    )}
                     <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={handleReset}
+                        title="重置"
                     >
-                        <RefreshCcw className="h-4 w-4 mr-2" />
-                        重置
+                        <RefreshCcw className="h-4 w-4" />
                     </Button>
                     <Button
                         type="button"
                         variant="outline"
                         size="sm"
                         onClick={handleCopy}
+                        title="复制"
                         disabled={!definition}
                     >
                         {copied ? (
-                            <ClipboardCheck className="h-4 w-4 mr-2" />
+                            <ClipboardCheck className="h-4 w-4" />
                         ) : (
-                            <ClipboardCopy className="h-4 w-4 mr-2" />
+                            <ClipboardCopy className="h-4 w-4" />
                         )}
-                        {copied ? "已复制" : "复制"}
                     </Button>
                 </div>
             </div>
-            <div className="flex-1 p-1 bg-muted/10 flex flex-col gap-2 overflow-hidden">
-                <Textarea
-                    value={definition}
-                    onChange={(event) => onChange(event.target.value)}
-                    placeholder="Enter Graphviz definition (digraph, graph, etc.)..."
-                    className="flex-1 min-h-0 text-xs resize-none bg-white/70 focus-visible:ring-2 overflow-auto font-mono"
-                    spellCheck={false}
-                />
-                <p className="text-[11px] text-muted-foreground">
-                    变更的 Graphviz 渲染器实时同步
-                </p>
-            </div>
+            {!isCollapsed && (
+                <div className="flex-1 bg-muted/10 flex flex-col overflow-hidden">
+                    <Textarea
+                        value={definition}
+                        onChange={(event) => onChange(event.target.value)}
+                        placeholder="Enter Graphviz definition (digraph, graph, etc.)..."
+                        className="flex-1 min-h-0 text-xs resize-none bg-white/70 focus-visible:ring-2 overflow-auto font-mono"
+                        spellCheck={false}
+                    />
+                </div>
+            )}
         </div>
     );
 }

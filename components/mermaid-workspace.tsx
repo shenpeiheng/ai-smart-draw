@@ -1,11 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { MermaidPreview } from "@/components/mermaid-preview";
 import { MermaidDefinitionCard } from "@/components/mermaid-definition-card";
 import { useMermaid } from "@/contexts/mermaid-context";
+import { ResizablePanel } from "@/components/resizable-panel";
 
 export function MermaidWorkspace() {
     const { definition, clearDefinition, setDefinition } = useMermaid();
+    const [isCollapsed, setIsCollapsed] = useState(false);
+
+    const togglePanel = () => {
+        setIsCollapsed(!isCollapsed);
+    };
 
     return (
         <div className="flex flex-col h-full gap-1">
@@ -15,13 +22,19 @@ export function MermaidWorkspace() {
                     className="h-full"
                 />
             </div>
-            <div className="h-52">
+            <ResizablePanel 
+                defaultHeight={208}
+                isCollapsed={isCollapsed}
+                onToggle={togglePanel}
+            >
                 <MermaidDefinitionCard
                     definition={definition}
                     onDefinitionChange={setDefinition}
                     onReset={clearDefinition}
+                    isCollapsed={isCollapsed}
+                    onToggle={togglePanel}
                 />
-            </div>
+            </ResizablePanel>
         </div>
     );
 }

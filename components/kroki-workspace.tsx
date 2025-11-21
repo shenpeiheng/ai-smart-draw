@@ -4,10 +4,16 @@ import { useState, useEffect } from "react";
 import { useKroki } from "@/contexts/kroki-context";
 import { KrokiPreview } from "@/components/kroki-preview";
 import { KrokiDefinitionCard } from "@/components/kroki-definition-card";
+import { ResizablePanel } from "@/components/resizable-panel";
 
 export function KrokiWorkspace() {
     const { definition, clearDefinition, setDefinition, setDefinitionForType } = useKroki();
     const [diagramType, setDiagramType] = useState<string>("auto");
+    const [isCollapsed, setIsCollapsed] = useState(false);
+
+    const togglePanel = () => {
+        setIsCollapsed(!isCollapsed);
+    };
 
     // When the diagram type changes, update the definition to match the selected type
     useEffect(() => {
@@ -25,13 +31,19 @@ export function KrokiWorkspace() {
                     onDiagramTypeChange={setDiagramType}
                 />
             </div>
-            <div className="h-52">
+            <ResizablePanel 
+                defaultHeight={208}
+                isCollapsed={isCollapsed}
+                onToggle={togglePanel}
+            >
                 <KrokiDefinitionCard
                     definition={definition}
                     onDefinitionChange={setDefinition}
                     onReset={clearDefinition}
+                    isCollapsed={isCollapsed}
+                    onToggle={togglePanel}
                 />
-            </div>
+            </ResizablePanel>
         </div>
     );
 }

@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
 import { History } from "lucide-react";
 import { useMemo, useCallback } from "react";
 import { useExcalidraw } from "@/contexts/excalidraw-context";
 import { ExcalidrawSceneCard } from "@/components/excalidraw-scene-card";
+import { ResizablePanel } from "@/components/resizable-panel";
 
 const Excalidraw = dynamic(
     async () => (await import("@excalidraw/excalidraw")).Excalidraw,
@@ -19,6 +21,11 @@ export function ExcalidrawWorkspace({
 }) {
     const { sceneData, recordScene, clearScene, excalidrawAPIRef, history } =
         useExcalidraw();
+    const [isCollapsed, setIsCollapsed] = useState(false);
+
+    const togglePanel = () => {
+        setIsCollapsed(!isCollapsed);
+    };
 
     const initialData = useMemo(() => {
         try {
@@ -48,13 +55,19 @@ export function ExcalidrawWorkspace({
                     onChange={handleOnChange}
                 />
             </div>
-            <div className="h-52">
+            <ResizablePanel 
+                defaultHeight={208}
+                isCollapsed={isCollapsed}
+                onToggle={togglePanel}
+            >
                 <ExcalidrawSceneCard
                     onClear={clearScene}
                     onHistory={onRequestHistory}
                     historyDisabled={history.length === 0}
+                    isCollapsed={isCollapsed}
+                    onToggle={togglePanel}
                 />
-            </div>
+            </ResizablePanel>
         </div>
     );
 }
