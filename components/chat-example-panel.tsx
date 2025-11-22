@@ -68,7 +68,7 @@ export default function ExamplePanel({
                 >
                     帮我画一只卡通机器猫
                 </button>
-                <button
+                {/*<button
                     className="text-xs bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-1 px-2 rounded"
                     onClick={handleReplicateArchitecture}
                 >
@@ -79,7 +79,7 @@ export default function ExamplePanel({
                     onClick={handleReplicateFlowchart}
                 >
                     复制此流程图
-                </button>
+                </button>*/}
             </div>
         </div>
     );
