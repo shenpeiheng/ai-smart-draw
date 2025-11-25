@@ -3,6 +3,8 @@
 import React, { createContext, useContext, useEffect, useMemo, useState } from "react";
 
 export interface ModelConfig {
+    id: string;
+    name: string;
     apiKey?: string;
     baseUrl?: string;
     model?: string;
@@ -10,15 +12,22 @@ export interface ModelConfig {
 }
 
 interface ModelConfigContextValue {
-    config: ModelConfig;
-    setConfig: (value: ModelConfig) => void;
-    updateConfig: (value: Partial<ModelConfig>) => void;
+    configs: ModelConfig[];
+    currentConfig: ModelConfig;
+    setCurrentConfig: (value: ModelConfig) => void;
+    addConfig: (value: ModelConfig) => void;
+    updateConfig: (id: string, value: Partial<ModelConfig>) => void;
+    deleteConfig: (id: string) => void;
+    switchToConfig: (id: string) => void;
     reset: () => void;
 }
 
-const STORAGE_KEY = "ai-model-config";
+const STORAGE_KEY = "ai-model-configs";
+const CURRENT_CONFIG_KEY = "ai-current-model-config";
 
 export const defaultModelConfig: ModelConfig = {
+    id: "default",
+    name: "默认配置",
     apiKey: "",
     baseUrl: "",
     model: "",
@@ -28,41 +37,93 @@ export const defaultModelConfig: ModelConfig = {
 const ModelConfigContext = createContext<ModelConfigContextValue | undefined>(undefined);
 
 export function ModelConfigProvider({ children }: { children: React.ReactNode }) {
-    const [config, setConfig] = useState<ModelConfig>(defaultModelConfig);
+    const [configs, setConfigs] = useState<ModelConfig[]>([defaultModelConfig]);
+    const [currentConfig, setCurrentConfig] = useState<ModelConfig>(defaultModelConfig);
 
     // Load from localStorage on mount
     useEffect(() => {
         try {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) {
-                const parsed = JSON.parse(stored) as ModelConfig;
-                setConfig({
-                    ...defaultModelConfig,
-                    ...parsed,
-                });
+            const storedConfigs = localStorage.getItem(STORAGE_KEY);
+            const storedCurrentConfig = localStorage.getItem(CURRENT_CONFIG_KEY);
+            
+            if (storedConfigs) {
+                const parsedConfigs = JSON.parse(storedConfigs) as ModelConfig[];
+                setConfigs(parsedConfigs);
+            }
+            
+            if (storedCurrentConfig) {
+                const parsedCurrentConfig = JSON.parse(storedCurrentConfig) as ModelConfig;
+                setCurrentConfig(parsedCurrentConfig);
             }
         } catch (error) {
-            console.warn("Failed to load model config from storage", error);
+            console.warn("Failed to load model configs from storage", error);
         }
     }, []);
 
-    // Persist to localStorage whenever config changes
+    // Persist to localStorage whenever configs or currentConfig changes
     useEffect(() => {
         try {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(configs));
+            localStorage.setItem(CURRENT_CONFIG_KEY, JSON.stringify(currentConfig));
         } catch (error) {
-            console.warn("Failed to save model config to storage", error);
+            console.warn("Failed to save model configs to storage", error);
         }
-    }, [config]);
+    }, [configs, currentConfig]);
+
+    const addConfig = (config: ModelConfig) => {
+        const newConfigs = [...configs, config];
+        setConfigs(newConfigs);
+    };
+
+    const updateConfig = (id: string, updates: Partial<ModelConfig>) => {
+        const newConfigs = configs.map(config => 
+            config.id === id ? { ...config, ...updates } : config
+        );
+        setConfigs(newConfigs);
+        
+        // If we're updating the current config, update it
+        if (currentConfig.id === id) {
+            setCurrentConfig({ ...currentConfig, ...updates });
+        }
+    };
+
+    const deleteConfig = (id: string) => {
+        // Prevent deleting the last config
+        if (configs.length <= 1) return;
+        
+        const newConfigs = configs.filter(config => config.id !== id);
+        setConfigs(newConfigs);
+        
+        // If we're deleting the current config, switch to the first one
+        if (currentConfig.id === id) {
+            setCurrentConfig(newConfigs[0]);
+        }
+    };
+
+    const switchToConfig = (id: string) => {
+        const config = configs.find(c => c.id === id);
+        if (config) {
+            setCurrentConfig(config);
+        }
+    };
+
+    const reset = () => {
+        setConfigs([defaultModelConfig]);
+        setCurrentConfig(defaultModelConfig);
+    };
 
     const value = useMemo<ModelConfigContextValue>(
         () => ({
-            config,
-            setConfig,
-            updateConfig: (value) => setConfig((prev) => ({ ...prev, ...value })),
-            reset: () => setConfig(defaultModelConfig),
+            configs,
+            currentConfig,
+            setCurrentConfig,
+            addConfig,
+            updateConfig,
+            deleteConfig,
+            switchToConfig,
+            reset,
         }),
-        [config]
+        [configs, currentConfig]
     );
 
     return (
