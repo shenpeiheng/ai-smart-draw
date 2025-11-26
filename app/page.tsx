@@ -43,10 +43,12 @@ export default function Home() {
                     ref={drawioRef}
                     onExport={handleDiagramExport}
                     urlParameters={{
+                        ui: "simple",
                         spin: true,
                         libraries: false,
                         saveAndExit: false,
                         noExitBtn: true,
+                        grid: true,
                     }}
                 />
             </div>
