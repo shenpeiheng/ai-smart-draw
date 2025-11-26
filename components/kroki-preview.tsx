@@ -12,64 +12,60 @@ import {
     Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { exportSVGAs, downloadBlob } from "@/lib/export-utils";
 
 interface KrokiPreviewProps {
     definition: string;
+    diagramType: string;
     className?: string;
-    diagramType?: string;
     onDiagramTypeChange?: (type: string) => void;
 }
 
-// Supported diagram types for the dropdown
 const DIAGRAM_TYPES = [
-    { value: "vegalite", label: "Vega-Lite" },
-    { value: "actdiag", label: "ActDiag" },
-    { value: "blockdiag", label: "BlockDiag" },
-    { value: "bpmn", label: "BPMN" },
-    { value: "bytefield", label: "Bytefield" },
-    { value: "c4plantuml", label: "C4 with PlantUML" },
-    { value: "tikz", label: "TikZ" },
-    { value: "ditaa", label: "Ditaa" },
-    { value: "erd", label: "ERD" },
-    { value: "excalidraw", label: "Excalidraw" },
-    { value: "graphviz", label: "Graphviz" },
-    { value: "mermaid", label: "Mermaid" },
-    { value: "nomnoml", label: "Nomnoml" },
-    { value: "nwdiag", label: "NwDiag" },
-    { value: "packetdiag", label: "PacketDiag" },
-    { value: "pikchr", label: "Pikchr" },
+    { value: "auto", label: "Auto Detect" },
     { value: "plantuml", label: "PlantUML" },
-    { value: "rackdiag", label: "RackDiag" },
+    { value: "mermaid", label: "Mermaid" },
+    { value: "graphviz", label: "Graphviz" },
+    { value: "blockdiag", label: "BlockDiag" },
     { value: "seqdiag", label: "SeqDiag" },
+    { value: "actdiag", label: "ActDiag" },
+    { value: "nwdiag", label: "NwDiag" },
+    { value: "c4plantuml", label: "C4 with PlantUML" },
+    { value: "ditaa", label: "Ditaa" },
+    { value: "erd", label: "Erd" },
+    { value: "excalidraw", label: "Excalidraw" },
+    { value: "nomnoml", label: "Nomnoml" },
+    { value: "pikchr", label: "Pikchr" },
     { value: "structurizr", label: "Structurizr" },
-    { value: "svgbob", label: "SvgBob" },
-    { value: "umlet", label: "UMlet" },
+    { value: "svgbob", label: "Svgbob" },
+    { value: "umlet", label: "Umlet" },
     { value: "vega", label: "Vega" },
-    { value: "d2", label: "D2" },
-    { value: "dbml", label: "DBML" },
-    { value: "wavedrom", label: "WaveDrom" },
-    { value: "wireviz", label: "WireViz" },
+    { value: "vegalite", label: "Vega-Lite" },
+    { value: "wavedrom", label: "Wavedrom" },
+    { value: "bytefield", label: "Bytefield" },
+    { value: "packetdiag", label: "PacketDiag" },
+    { value: "rackdiag", label: "RackDiag" },
     { value: "symbolator", label: "Symbolator" },
-
+    { value: "tikz", label: "TikZ" },
 ];
 
 const RENDER_DEBOUNCE_MS = 500;
 
-export function KrokiPreview({ 
-    definition, 
+export function KrokiPreview({
+    definition,
+    diagramType,
     className,
-    diagramType = "auto",
-    onDiagramTypeChange
+    onDiagramTypeChange,
 }: KrokiPreviewProps) {
     const [copied, setCopied] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [svgMarkup, setSvgMarkup] = useState<string>("");
-    const [rendererLabel] = useState<string | null>("kroki.io");
     const [isLoading, setIsLoading] = useState(false);
     const [retryNonce, setRetryNonce] = useState(0);
     const [debouncedDefinition, setDebouncedDefinition] = useState(definition);
     const [zoom, setZoom] = useState(1);
     const [isResetting, setIsResetting] = useState(false);
+    const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -91,23 +87,12 @@ export function KrokiPreview({
         setIsLoading(true);
         setLoadError(null);
 
-        // Prepare the request body
-        let requestBody: any = { definition: debouncedDefinition };
-        
-        // If diagramType is specified and not "auto", add type prefix to definition before sending to renderer
-        if (diagramType && diagramType !== "auto") {
-            requestBody = { 
-                definition: debouncedDefinition, 
-                diagramType: diagramType 
-            };
-        }
-
         fetch("/api/kroki/render", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify(requestBody),
+            body: JSON.stringify({ definition: debouncedDefinition, diagramType }),
             signal: controller.signal,
         })
             .then(async (response) => {
@@ -139,7 +124,7 @@ export function KrokiPreview({
         return () => {
             controller.abort();
         };
-    }, [debouncedDefinition, retryNonce, diagramType]);
+    }, [debouncedDefinition, diagramType, retryNonce]);
 
     useEffect(() => {
         if (!copied) return;
@@ -151,43 +136,51 @@ export function KrokiPreview({
         setRetryNonce((value) => value + 1);
     };
 
-    const zoomIn = () => setZoom((z) => Math.min(z + 0.1, 3));
-    const zoomOut = () => setZoom((z) => Math.max(z - 0.1, 0.3));
+    const zoomIn = () => setZoom((z) => Math.min(z * 1.2, 3));
+    const zoomOut = () => setZoom((z) => Math.max(z / 1.2, 0.5));
     
     const resetZoom = () => {
         setIsResetting(true);
         setZoom(1);
-        // 添加一个短暂的延迟来显示重置动画效果
         setTimeout(() => setIsResetting(false), 300);
     };
 
-    const handleDownload = () => {
+    const handleDownload = async (format: 'png' | 'jpeg' | 'svg' | 'pdf') => {
         if (!svgMarkup) return;
         
-        let blob;
-        let filename;
-        
-        if (svgMarkup.startsWith("data:")) {
-            // Handle data URL
-            const parts = svgMarkup.split(',');
-            const mimeType = parts[0].match(/:(.*?);/)?.[1] || "image/svg+xml";
-            const decodedData = atob(parts[1]);
-            blob = new Blob([decodedData], { type: mimeType });
-            filename = `kroki-diagram.${mimeType.split('/')[1] || 'svg'}`;
-        } else {
-            // Handle raw SVG string
-            blob = new Blob([svgMarkup], { type: "image/svg+xml" });
-            filename = "kroki-diagram.svg";
+        try {
+            let blob: Blob;
+            let filename: string;
+            
+            if (svgMarkup.startsWith("data:")) {
+                // Handle data URL
+                const parts = svgMarkup.split(',');
+                const mimeType = parts[0].match(/:(.*?);/)?.[1] || "image/svg+xml";
+                const decodedData = atob(parts[1]);
+                const svgString = decodedData;
+                
+                if (format === 'svg') {
+                    blob = new Blob([svgString], { type: mimeType });
+                    filename = `kroki-diagram.${format}`;
+                } else {
+                    blob = await exportSVGAs(svgString, { format, quality: 0.9, scale: 2 });
+                    filename = `kroki-diagram.${format}`;
+                }
+            } else {
+                // Handle raw SVG string
+                if (format === 'svg') {
+                    blob = new Blob([svgMarkup], { type: "image/svg+xml" });
+                    filename = "kroki-diagram.svg";
+                } else {
+                    blob = await exportSVGAs(svgMarkup, { format, quality: 0.9, scale: 2 });
+                    filename = `kroki-diagram.${format}`;
+                }
+            }
+            
+            downloadBlob(blob, filename);
+        } catch (error) {
+            console.error(`Failed to export as ${format}:`, error);
         }
-        
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
     };
 
     const previewContent = useMemo(() => {
@@ -288,9 +281,49 @@ export function KrokiPreview({
                             <ZoomIn className="h-4 w-4" />
                         </Button>
                     </div>
-                    <Button variant="outline" title="下载" size="sm" onClick={handleDownload} disabled={!svgMarkup}>
-                        <Download className="h-4 w-4" />
-                    </Button>
+                    <div className="relative">
+                        <Button 
+                            variant="outline" 
+                            title="导出" 
+                            size="sm" 
+                            onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+                            disabled={!svgMarkup}
+                        >
+                            <Download className="h-4 w-4" />
+                        </Button>
+                        
+                        {isExportMenuOpen && (
+                            <div className="absolute right-0 mt-1 w-32 bg-white border rounded-md shadow-lg z-10">
+                                <button
+                                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                                    onClick={() => {
+                                        handleDownload('png');
+                                        setIsExportMenuOpen(false);
+                                    }}
+                                >
+                                    PNG
+                                </button>
+                                <button
+                                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                                    onClick={() => {
+                                        handleDownload('jpeg');
+                                        setIsExportMenuOpen(false);
+                                    }}
+                                >
+                                    JPEG
+                                </button>
+                                <button
+                                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                                    onClick={() => {
+                                        handleDownload('svg');
+                                        setIsExportMenuOpen(false);
+                                    }}
+                                >
+                                    SVG
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
             <div className="flex-1 p-4 bg-white overflow-auto relative">

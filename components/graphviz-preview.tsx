@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useGraphviz } from "@/contexts/graphviz-context";
+import { exportSVGAs, downloadBlob } from "@/lib/export-utils";
 
 const RENDER_DEBOUNCE_MS = 500;
 
@@ -28,6 +29,7 @@ export function GraphvizPreview() {
     const [debouncedDefinition, setDebouncedDefinition] = useState(definition);
     const [zoom, setZoom] = useState(1);
     const [isResetting, setIsResetting] = useState(false);
+    const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -104,33 +106,42 @@ export function GraphvizPreview() {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const handleDownload = () => {
+    const handleDownload = async (format: 'png' | 'jpeg' | 'svg' | 'pdf') => {
         if (!svgMarkup) return;
         
-        let blob;
-        let filename;
-        
-        if (svgMarkup.startsWith("data:")) {
-            // Handle data URL
-            const parts = svgMarkup.split(',');
-            const mimeType = parts[0].match(/:(.*?);/)?.[1] || "image/svg+xml";
-            const decodedData = atob(parts[1]);
-            blob = new Blob([decodedData], { type: mimeType });
-            filename = `graphviz-diagram.${mimeType.split('/')[1] || 'svg'}`;
-        } else {
-            // Handle raw SVG string
-            blob = new Blob([svgMarkup], { type: "image/svg+xml" });
-            filename = "graphviz-diagram.svg";
+        try {
+            let blob: Blob;
+            let filename: string;
+            
+            if (svgMarkup.startsWith("data:")) {
+                // Handle data URL
+                const parts = svgMarkup.split(',');
+                const mimeType = parts[0].match(/:(.*?);/)?.[1] || "image/svg+xml";
+                const decodedData = atob(parts[1]);
+                const svgString = decodedData;
+                
+                if (format === 'svg') {
+                    blob = new Blob([svgString], { type: mimeType });
+                    filename = `graphviz-diagram.${format}`;
+                } else {
+                    blob = await exportSVGAs(svgString, { format, quality: 0.9, scale: 2 });
+                    filename = `graphviz-diagram.${format}`;
+                }
+            } else {
+                // Handle raw SVG string
+                if (format === 'svg') {
+                    blob = new Blob([svgMarkup], { type: "image/svg+xml" });
+                    filename = "graphviz-diagram.svg";
+                } else {
+                    blob = await exportSVGAs(svgMarkup, { format, quality: 0.9, scale: 2 });
+                    filename = `graphviz-diagram.${format}`;
+                }
+            }
+            
+            downloadBlob(blob, filename);
+        } catch (error) {
+            console.error(`Failed to export as ${format}:`, error);
         }
-        
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
     };
 
     const handleRetry = () => {
@@ -243,9 +254,49 @@ export function GraphvizPreview() {
                             <ZoomIn className="h-4 w-4" />
                         </Button>
                     </div>
-                    <Button variant="outline" title="下载" size="sm" onClick={handleDownload} disabled={!svgMarkup}>
-                        <Download className="h-4 w-4" />
-                    </Button>
+                    <div className="relative">
+                        <Button 
+                            variant="outline" 
+                            title="导出" 
+                            size="sm" 
+                            onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+                            disabled={!svgMarkup}
+                        >
+                            <Download className="h-4 w-4" />
+                        </Button>
+                        
+                        {isExportMenuOpen && (
+                            <div className="absolute right-0 mt-1 w-32 bg-white border rounded-md shadow-lg z-10">
+                                <button
+                                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                                    onClick={() => {
+                                        handleDownload('png');
+                                        setIsExportMenuOpen(false);
+                                    }}
+                                >
+                                    PNG
+                                </button>
+                                <button
+                                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                                    onClick={() => {
+                                        handleDownload('jpeg');
+                                        setIsExportMenuOpen(false);
+                                    }}
+                                >
+                                    JPEG
+                                </button>
+                                <button
+                                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                                    onClick={() => {
+                                        handleDownload('svg');
+                                        setIsExportMenuOpen(false);
+                                    }}
+                                >
+                                    SVG
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
             <div className="flex-1 p-4 bg-white overflow-auto relative">

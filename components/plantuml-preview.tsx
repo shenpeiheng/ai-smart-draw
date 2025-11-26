@@ -12,6 +12,7 @@ import {
     Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { exportSVGAs, downloadBlob } from "@/lib/export-utils";
 
 interface PlantUMLPreviewProps {
     definition: string;
@@ -29,6 +30,7 @@ export function PlantUMLPreview({ definition }: PlantUMLPreviewProps) {
     const [debouncedDefinition, setDebouncedDefinition] = useState(definition);
     const [zoom, setZoom] = useState(1);
     const [isResetting, setIsResetting] = useState(false);
+    const [isExportMenuOpen, setIsExportMenuOpen] = useState(false);
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -112,34 +114,62 @@ export function PlantUMLPreview({ definition }: PlantUMLPreviewProps) {
         setTimeout(() => setIsResetting(false), 300);
     };
 
-    const handleDownload = () => {
+    const handleDownload = async (format: 'png' | 'jpeg' | 'svg' | 'pdf') => {
         if (!svgMarkup) return;
         
-        let blob;
-        let filename;
-        
-        if (svgMarkup.startsWith("data:")) {
-            // Handle data URL
-            const parts = svgMarkup.split(',');
-            const mimeType = parts[0].match(/:(.*?);/)?.[1] || "image/svg+xml";
-            const decodedData = atob(parts[1]);
-            blob = new Blob([decodedData], { type: mimeType });
-            filename = `plantuml-diagram.${mimeType.split('/')[1] || 'svg'}`;
-        } else {
-            // Handle raw SVG string
-            blob = new Blob([svgMarkup], { type: "image/svg+xml" });
-            filename = "plantuml-diagram.svg";
+        try {
+            console.log(`Exporting PlantUML as ${format}:`, svgMarkup.substring(0, 200) + '...');
+            
+            let blob: Blob;
+            let filename: string;
+            
+            if (svgMarkup.startsWith("data:")) {
+                // Handle data URL
+                const parts = svgMarkup.split(',');
+                const mimeType = parts[0].match(/:(.*?);/)?.[1] || "image/svg+xml";
+                const decodedData = atob(parts[1]);
+                const svgString = decodedData;
+                
+                if (format === 'svg') {
+                    blob = new Blob([svgString], { type: mimeType });
+                    filename = `plantuml-diagram.${format}`;
+                } else {
+                    blob = await exportSVGAs(svgString, { format, quality: 0.9, scale: 2 });
+                    filename = `plantuml-diagram.${format}`;
+                }
+            } else {
+                // Handle raw SVG string
+                if (format === 'svg') {
+                    blob = new Blob([svgMarkup], { type: "image/svg+xml" });
+                    filename = "plantuml-diagram.svg";
+                } else {
+                    blob = await exportSVGAs(svgMarkup, { format, quality: 0.9, scale: 2 });
+                    filename = `plantuml-diagram.${format}`;
+                }
+            }
+            
+            downloadBlob(blob, filename);
+            setIsExportMenuOpen(false);
+        } catch (error) {
+            console.error(`Failed to export PlantUML as ${format}:`, error);
+            setLoadError(`导出失败: ${error instanceof Error ? error.message : '未知错误'}`);
         }
-        
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
     };
+
+    // Close export menu when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            const target = event.target as HTMLElement;
+            if (isExportMenuOpen && !target.closest('.export-menu-container')) {
+                setIsExportMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isExportMenuOpen]);
 
     const previewContent = useMemo(() => {
         if (loadError) {
@@ -239,9 +269,46 @@ export function PlantUMLPreview({ definition }: PlantUMLPreviewProps) {
                             <ZoomIn className="h-4 w-4" />
                         </Button>
                     </div>
-                    <Button variant="outline" title="下载" size="sm" onClick={handleDownload} disabled={!svgMarkup}>
-                        <Download className="h-4 w-4" />
-                    </Button>
+                    <div className="relative export-menu-container">
+                        <Button 
+                            variant="outline" 
+                            title="导出" 
+                            size="sm" 
+                            onClick={() => setIsExportMenuOpen(!isExportMenuOpen)}
+                            disabled={!svgMarkup}
+                        >
+                            <Download className="h-4 w-4" />
+                        </Button>
+                        
+                        {isExportMenuOpen && (
+                            <div className="absolute right-0 mt-1 w-32 bg-white border rounded-md shadow-lg z-10">
+                                <button
+                                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                                    onClick={() => {
+                                        handleDownload('png');
+                                    }}
+                                >
+                                    PNG
+                                </button>
+                                <button
+                                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                                    onClick={() => {
+                                        handleDownload('jpeg');
+                                    }}
+                                >
+                                    JPEG
+                                </button>
+                                <button
+                                    className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+                                    onClick={() => {
+                                        handleDownload('svg');
+                                    }}
+                                >
+                                    SVG
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
             <div className="flex-1 p-4 bg-white overflow-auto relative">
