@@ -1,0 +1,12 @@
+name = "ai-smart-draw"
+compatibility_date = "2024-11-20"
+pages_build_output_dir = ".vercel/output/static"
+
+# Bindings map 1:1 to existing env vars; set in Cloudflare dashboard or .dev.vars
+# example:
+# [vars]
+# OPENAI_API_KEY = "..."
+# KROKI_SERVER_URL = "https://kroki.io"
+
+[build]
+command = "npx @cloudflare/next-on-pages"

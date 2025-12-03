@@ -149,6 +149,13 @@ Check out the [Next.js deployment documentation](https://nextjs.org/docs/app/bui
 Or you can deploy by this button.
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fshenpeiheng%2Fai-smart-draw)
 
+### Cloudflare Pages
+- Build command: `npm run cf:build`
+- Output directory: `.vercel/output/static` (functions located at `.vercel/output/functions`, automatically recognized by Pages)
+- Local preview: `npm run cf:preview` (loads `.dev.vars`)
+- Deploy: `npm run cf:deploy` (requires creating a Pages project on Cloudflare first and configuring environment variables with the same name)
+- Existing Vercel processes remain unchanged.
+
 ## 📁 Project Structure
 
 ```
