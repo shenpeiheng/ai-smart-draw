@@ -152,13 +152,6 @@ npm run dev
 或者您可以使用此按钮进行部署。
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fshenpeiheng%2Fai-smart-draw)
 
-### Cloudflare Pages
-- 构建命令：`npm run cf:build`
-- 输出目录：`.vercel/output/static`（函数位于 `.vercel/output/functions`，Pages 会自动识别）
-- 本地预览：`npm run cf:preview`（加载 `.dev.vars`）
-- 部署：`npm run cf:deploy`（需先在 Cloudflare 创建 Pages 项目并配置同名环境变量）
-- 现有 Vercel 流程保持不变。
-
 ## 📁 项目结构
 
 ```
