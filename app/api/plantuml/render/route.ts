@@ -1,8 +1,7 @@
-"use server";
-
-import { Buffer } from "node:buffer";
 import { NextRequest, NextResponse } from "next/server";
 import { encode } from "plantuml-encoder";
+
+export const runtime = "edge";
 
 const DEFAULT_RENDERERS = [
     process.env.PLANTUML_RENDER_BASE?.replace(/\/$/, ""),
