@@ -6,6 +6,7 @@ const DEFAULT_MAX_OUTPUT_TOKENS = 12_000;
 const MAX_OUTPUT_TOKENS_CAP = 24_000;
 
 export const maxDuration = 60;
+export const runtime = "edge";
 
 export async function POST(req: Request) {
     try {
